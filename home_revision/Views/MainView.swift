@@ -3,6 +3,8 @@ import SwiftUI
 struct MainView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var productViewModel = ProductViewModel()
+    @State private var isShowingAddProductView = false
+    @State private var isShowingSettingsView = false
 
     var body: some View {
         NavigationView {
@@ -14,10 +16,13 @@ struct MainView: View {
                     // Заголовок и шестеренка в HStack
                     HStack {
                         Button(action: {
-                            // Пока что пустое действие
+                            isShowingSettingsView = true // Открываем экран настроек
                         }) {
                             Image(systemName: "gearshape")
                                 .foregroundColor(.darkBrown)
+                        }
+                        .sheet(isPresented: $isShowingSettingsView) {
+                            SettingsView() // Переход на экран настроек
                         }
 
                         Spacer()
@@ -27,20 +32,21 @@ struct MainView: View {
                             .foregroundColor(.darkBrown)
 
                         Spacer()
-                        
-                        // Добавим отступ справа для симметрии
-                        Spacer(minLength: 50)
+
+                        // Пустое место для выравнивания
+                        Spacer()
+                            .frame(width: 24) // Ширина иконки настроек для симметрии
                     }
                     .padding()
 
                     Divider()
-                        .frame(height: 1) // Толщина линии
-                        .background(Color.gray) // Цвет линии
+                        .frame(height: 1)
+                        .background(Color.gray)
                         .opacity(0.3)
 
                     // Кнопка "Добавить продукт"
                     Button(action: {
-                        // Пока нет функционала
+                        isShowingAddProductView = true
                     }) {
                         Text("Добавить продукт")
                             .frame(maxWidth: .infinity)
@@ -50,7 +56,12 @@ struct MainView: View {
                             .cornerRadius(10)
                     }
                     .padding(.horizontal)
-                    .padding(.bottom, 10) // Отступ под кнопкой
+                    .padding(.bottom, 10)
+                    .sheet(isPresented: $isShowingAddProductView) {
+                        AddProductView(onProductAdded: {
+                            productViewModel.fetchProducts()
+                        })
+                    }
 
                     if let errorMessage = productViewModel.errorMessage {
                         Text(errorMessage)
@@ -60,60 +71,29 @@ struct MainView: View {
                         ScrollView {
                             VStack(spacing: 10) {
                                 ForEach(productViewModel.products) { product in
-                                    Button(action: {
-                                        // Пока что ничего не делаем, но позже можно добавить переход на страницу редактирования
-                                    }) {
-                                        HStack {
-                                            Text("\(product.title)")
-                                                .font(.headline)
-                                                .foregroundColor(.white)
-
-                                            Spacer()
-
-                                            Text("\(product.quantity)/\(product.target_quantity) \(product.unit)")
-                                                .foregroundColor(product.quantity < product.target_quantity ? Color.errorRed : Color.white)
+                                    ProductRowView(
+                                        product: product,
+                                        onUpdate: { updatedProduct in
+                                            // Обновляем продукт в массиве
+                                            if let index = productViewModel.products.firstIndex(where: { $0.id == updatedProduct.id }) {
+                                                productViewModel.products[index] = updatedProduct
+                                            }
                                         }
-                                        .padding()
-                                        .background(
-                                            LinearGradient(
-                                                gradient: Gradient(stops: [
-                                                    .init(color: Color.primaryOrange, location: CGFloat(product.quantity) / CGFloat(product.target_quantity)),
-                                                    .init(color: Color.primaryOrange.opacity(0.3), location: CGFloat(product.quantity) / CGFloat(product.target_quantity))
-                                                ]),
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            )
-                                        )
-                                        .cornerRadius(10)
-                                        .shadow(radius: 5)
-                                    }
-                                    .buttonStyle(PlainButtonStyle()) // Убираем стандартный стиль кнопки
+                                    )
                                 }
                             }
-                            .padding(.horizontal)
                             .padding(.top, 10)
                         }
                         .background(Color.backgroundBeige)
                     }
 
                     Spacer()
-
-                    Button(action: {
-                        authViewModel.logout()
-                    }) {
-                        Text("Выйти")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.accentYellow)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                    }
-                    .padding()
                 }
             }
             .onAppear {
                 productViewModel.fetchProducts()
             }
+            .navigationBarHidden(true)
         }
     }
 }

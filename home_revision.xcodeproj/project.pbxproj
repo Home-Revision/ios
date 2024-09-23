@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		EA38419E2CA1864B00271479 /* AddProductView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA38419D2CA1864B00271479 /* AddProductView.swift */; };
+		EA3841A02CA18A3F00271479 /* EditProductView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA38419F2CA18A3F00271479 /* EditProductView.swift */; };
+		EA3841A22CA18C8C00271479 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3841A12CA18C8C00271479 /* SettingsView.swift */; };
+		EA3841A42CA1A80A00271479 /* ProductRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3841A32CA1A80A00271479 /* ProductRowView.swift */; };
 		EACE0E0C2CA0A54C00704B14 /* home_revisionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACE0E0B2CA0A54C00704B14 /* home_revisionApp.swift */; };
 		EACE0E0E2CA0A54C00704B14 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACE0E0D2CA0A54C00704B14 /* ContentView.swift */; };
 		EACE0E102CA0A54E00704B14 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EACE0E0F2CA0A54E00704B14 /* Assets.xcassets */; };
@@ -46,6 +50,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		EA38419D2CA1864B00271479 /* AddProductView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddProductView.swift; sourceTree = "<group>"; };
+		EA38419F2CA18A3F00271479 /* EditProductView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProductView.swift; sourceTree = "<group>"; };
+		EA3841A12CA18C8C00271479 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		EA3841A32CA1A80A00271479 /* ProductRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductRowView.swift; sourceTree = "<group>"; };
 		EACE0E082CA0A54C00704B14 /* home_revision.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = home_revision.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EACE0E0B2CA0A54C00704B14 /* home_revisionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = home_revisionApp.swift; sourceTree = "<group>"; };
 		EACE0E0D2CA0A54C00704B14 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -95,6 +103,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		EA38419C2CA1863800271479 /* Product */ = {
+			isa = PBXGroup;
+			children = (
+				EA38419D2CA1864B00271479 /* AddProductView.swift */,
+				EA38419F2CA18A3F00271479 /* EditProductView.swift */,
+				EA3841A32CA1A80A00271479 /* ProductRowView.swift */,
+			);
+			path = Product;
+			sourceTree = "<group>";
+		};
 		EACE0DFF2CA0A54C00704B14 = {
 			isa = PBXGroup;
 			children = (
@@ -178,10 +196,12 @@
 		EACE0E3B2CA0B06100704B14 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				EA38419C2CA1863800271479 /* Product */,
 				EACE0E452CA0B7AE00704B14 /* Forms */,
 				EACE0E422CA0B74B00704B14 /* Auth */,
 				EACE0E3E2CA0B08200704B14 /* MainView.swift */,
 				EACE0E402CA0B72A00704B14 /* WelcomeView.swift */,
+				EA3841A12CA18C8C00271479 /* SettingsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -343,14 +363,18 @@
 			files = (
 				EACE0E542CA0DC5E00704B14 /* ProductViewModel.swift in Sources */,
 				EACE0E4F2CA0C39B00704B14 /* NotificationBanner.swift in Sources */,
+				EA3841A02CA18A3F00271479 /* EditProductView.swift in Sources */,
 				EACE0E472CA0B7CF00704B14 /* AuthFormView.swift in Sources */,
 				EACE0E0E2CA0A54C00704B14 /* ContentView.swift in Sources */,
+				EA3841A22CA18C8C00271479 /* SettingsView.swift in Sources */,
 				EACE0E4D2CA0BFF500704B14 /* Color.swift in Sources */,
 				EACE0E3F2CA0B08200704B14 /* MainView.swift in Sources */,
 				EACE0E0C2CA0A54C00704B14 /* home_revisionApp.swift in Sources */,
 				EACE0E4B2CA0B88200704B14 /* KeychainHelper.swift in Sources */,
 				EACE0E372CA0AF4D00704B14 /* AuthViewModel.swift in Sources */,
+				EA38419E2CA1864B00271479 /* AddProductView.swift in Sources */,
 				EACE0E3A2CA0AFBB00704B14 /* Utils.swift in Sources */,
+				EA3841A42CA1A80A00271479 /* ProductRowView.swift in Sources */,
 				EACE0E412CA0B72A00704B14 /* WelcomeView.swift in Sources */,
 				EACE0E492CA0B80D00704B14 /* LoginView.swift in Sources */,
 				EACE0E442CA0B75E00704B14 /* RegistrationView.swift in Sources */,
