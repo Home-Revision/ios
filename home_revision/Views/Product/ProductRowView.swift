@@ -2,8 +2,8 @@ import SwiftUI
 import UIKit
 
 struct ProductRowView: View {
-    let product: Product
-    let onUpdate: (Product) -> Void
+    @Binding var product: Product
+    let onUpdate: (Result<Product?, Error>) -> Void
 
     @State private var isExpanded: Bool = false
     @State private var quantity: Int
@@ -16,13 +16,13 @@ struct ProductRowView: View {
     @State private var originalQuantity: Int
     @State private var originalTargetQuantity: Int
 
-    init(product: Product, onUpdate: @escaping (Product) -> Void) {
-        self.product = product
+    init(product: Binding<Product>, onUpdate: @escaping (Result<Product?, Error>) -> Void) {
+        self._product = product
         self.onUpdate = onUpdate
-        _quantity = State(initialValue: product.quantity)
-        _targetQuantity = State(initialValue: product.target_quantity)
-        _originalQuantity = State(initialValue: product.quantity)
-        _originalTargetQuantity = State(initialValue: product.target_quantity)
+        _quantity = State(initialValue: product.wrappedValue.quantity)
+        _targetQuantity = State(initialValue: product.wrappedValue.target_quantity)
+        _originalQuantity = State(initialValue: product.wrappedValue.quantity)
+        _originalTargetQuantity = State(initialValue: product.wrappedValue.target_quantity)
     }
 
     var body: some View {
@@ -81,13 +81,23 @@ struct ProductRowView: View {
             )
             .sheet(isPresented: $isShowingEditView) {
                 // Передаем обновленный продукт обратно через onUpdate
-                EditProductView(product: product) { updatedProduct in
-                    onUpdate(updatedProduct)
-                    // Обновляем локальные и исходные значения после редактирования
-                    quantity = updatedProduct.quantity
-                    targetQuantity = updatedProduct.target_quantity
-                    originalQuantity = updatedProduct.quantity
-                    originalTargetQuantity = updatedProduct.target_quantity
+                EditProductView(product: $product.wrappedValue) { result in
+                    switch result {
+                    case .success(let updatedProduct):
+                        if let updatedProduct = updatedProduct {
+                            onUpdate(.success(updatedProduct))
+                            // Обновляем локальные и исходные значения после редактирования
+                            quantity = updatedProduct.quantity
+                            targetQuantity = updatedProduct.target_quantity
+                            originalQuantity = updatedProduct.quantity
+                            originalTargetQuantity = updatedProduct.target_quantity
+                        } else {
+                            // Продукт был удален
+                            onUpdate(.success(nil))
+                        }
+                    case .failure(let error):
+                        onUpdate(.failure(error))
+                    }
                 }
             }
 
@@ -166,6 +176,13 @@ struct ProductRowView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 5)
+        .onChange(of: product) { newProduct in
+            // Обновляем локальные значения при изменении продукта
+            quantity = newProduct.quantity
+            targetQuantity = newProduct.target_quantity
+            originalQuantity = newProduct.quantity
+            originalTargetQuantity = newProduct.target_quantity
+        }
     }
 
     // Метод для обновления продукта
@@ -222,11 +239,16 @@ struct ProductRowView: View {
 
                 if httpResponse.statusCode == 200 {
                     // Успешное обновление
-                    originalQuantity = quantity
-                    originalTargetQuantity = targetQuantity
-
-                    let updatedProduct = Product(id: product.id, user_id: product.user_id, title: product.title, description: product.description, quantity: quantity, target_quantity: targetQuantity, unit: product.unit)
-                    onUpdate(updatedProduct)
+                    let updatedProduct = Product(
+                        id: product.id,
+                        user_id: product.user_id,
+                        title: product.title,
+                        description: product.description,
+                        quantity: quantity,
+                        target_quantity: targetQuantity,
+                        unit: product.unit
+                    )
+                    onUpdate(.success(updatedProduct))
 
                     withAnimation {
                         isExpanded = false
@@ -241,6 +263,55 @@ struct ProductRowView: View {
         }.resume()
     }
 
+    // Метод для удаления продукта
+    func deleteProduct() {
+        guard let url = URL(string: "http://localhost:8080/api/products/destroy/\(product.id)/") else {
+            errorMessage = "Неверный URL"
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        // Добавляем токен авторизации
+        if let accessToken = getAccessToken() {
+            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        } else {
+            errorMessage = "Токен авторизации не найден"
+            return
+        }
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    errorMessage = "Ошибка: \(error.localizedDescription)"
+                    return
+                }
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    errorMessage = "Некорректный ответ сервера"
+                    return
+                }
+
+                if httpResponse.statusCode == 204 {
+                    // Продукт успешно удален
+                    onUpdate(.success(nil))
+
+                    withAnimation {
+                        isExpanded = false
+                        // Триггерим тактильную обратную связь при закрытии
+                        let generator = UIImpactFeedbackGenerator(style: .light)
+                        generator.impactOccurred()
+                    }
+                } else {
+                    errorMessage = "Не удалось удалить продукт. Статус: \(httpResponse.statusCode)"
+                }
+            }
+        }.resume()
+    }
+
+    // Метод для получения токена
     func getAccessToken() -> String? {
         return KeychainHelper.standard.read(service: "access-token", account: "your-app")
     }

@@ -70,13 +70,24 @@ struct MainView: View {
                     } else {
                         ScrollView {
                             VStack(spacing: 10) {
-                                ForEach(productViewModel.products) { product in
+                                ForEach($productViewModel.products) { $product in
                                     ProductRowView(
-                                        product: product,
-                                        onUpdate: { updatedProduct in
-                                            // Обновляем продукт в массиве
-                                            if let index = productViewModel.products.firstIndex(where: { $0.id == updatedProduct.id }) {
-                                                productViewModel.products[index] = updatedProduct
+                                        product: $product,
+                                        onUpdate: { result in
+                                            switch result {
+                                            case .success(let updatedProduct):
+                                                if let updatedProduct = updatedProduct {
+                                                    // Обновляем продукт в массиве
+                                                    if let index = productViewModel.products.firstIndex(where: { $0.id == updatedProduct.id }) {
+                                                        productViewModel.products[index] = updatedProduct
+                                                    }
+                                                } else {
+                                                    // Продукт был удален, удаляем его из массива
+                                                    productViewModel.products.removeAll { $0.id == product.id }
+                                                }
+                                            case .failure(let error):
+                                                // Обработка ошибки при необходимости
+                                                print("Error updating product: \(error.localizedDescription)")
                                             }
                                         }
                                     )

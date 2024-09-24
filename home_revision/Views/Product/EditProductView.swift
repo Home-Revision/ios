@@ -11,12 +11,12 @@ struct EditProductView: View {
     @State private var errorMessage: String? = nil
     @State private var isSubmitting: Bool = false
     @State private var showDeleteConfirmation = false
-    @Environment(\.presentationMode) var presentationMode
-    let onProductUpdated: (Product) -> Void
+    @Environment(\.dismiss) private var dismiss // Используем modern dismiss
+    let onProductUpdated: (Result<Product?, Error>) -> Void
 
     let units = ["шт", "кг", "гр", "л", "мл"]
 
-    init(product: Product, onProductUpdated: @escaping (Product) -> Void) {
+    init(product: Product, onProductUpdated: @escaping (Result<Product?, Error>) -> Void) {
         self.product = product
         _title = State(initialValue: product.title)
         _description = State(initialValue: product.description ?? "")
@@ -155,6 +155,7 @@ struct EditProductView: View {
         }
     }
 
+    // Метод для обновления продукта
     func updateProduct() {
         guard let quantityValue = Int(quantity), quantityValue >= 0 else {
             errorMessage = "Количество должно быть положительным числом."
@@ -224,31 +225,39 @@ struct EditProductView: View {
 
                 if let error = error {
                     errorMessage = "Ошибка: \(error.localizedDescription)"
+                    onProductUpdated(.failure(error))
                     return
                 }
 
                 guard let httpResponse = response as? HTTPURLResponse else {
                     errorMessage = "Некорректный ответ сервера"
+                    onProductUpdated(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Некорректный ответ сервера"])))
                     return
                 }
 
                 if httpResponse.statusCode == 200 {
-                    var updatedProduct = product
-                    updatedProduct.title = title
-                    updatedProduct.description = description
-                    updatedProduct.quantity = quantityValue
-                    updatedProduct.target_quantity = targetQuantityValue
-                    updatedProduct.unit = unit
-
-                    onProductUpdated(updatedProduct)
-                    presentationMode.wrappedValue.dismiss()
+                    // Успешное обновление
+                    let updatedProduct = Product(
+                        id: product.id,
+                        user_id: product.user_id,
+                        title: title,
+                        description: description,
+                        quantity: quantityValue,
+                        target_quantity: targetQuantityValue,
+                        unit: unit
+                    )
+                    onProductUpdated(.success(updatedProduct))
+                    dismiss() // Закрываем экран после успешного сохранения
                 } else {
                     errorMessage = "Не удалось обновить продукт. Статус: \(httpResponse.statusCode)"
+                    let error = NSError(domain: "", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: errorMessage!])
+                    onProductUpdated(.failure(error))
                 }
             }
         }.resume()
     }
 
+    // Метод для удаления продукта
     func deleteProduct() {
         guard let url = URL(string: "http://localhost:8080/api/products/destroy/\(product.id)/") else {
             errorMessage = "Неверный URL"
@@ -270,24 +279,30 @@ struct EditProductView: View {
             DispatchQueue.main.async {
                 if let error = error {
                     errorMessage = "Ошибка: \(error.localizedDescription)"
+                    onProductUpdated(.failure(error))
                     return
                 }
 
                 guard let httpResponse = response as? HTTPURLResponse else {
                     errorMessage = "Некорректный ответ сервера"
+                    onProductUpdated(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Некорректный ответ сервера"])))
                     return
                 }
 
                 if httpResponse.statusCode == 204 {
-                    onProductUpdated(product)
-                    presentationMode.wrappedValue.dismiss()
+                    // Продукт успешно удален
+                    onProductUpdated(.success(nil))
+                    dismiss() // Закрываем экран после успешного удаления
                 } else {
                     errorMessage = "Не удалось удалить продукт. Статус: \(httpResponse.statusCode)"
+                    let error = NSError(domain: "", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: errorMessage!])
+                    onProductUpdated(.failure(error))
                 }
             }
         }.resume()
     }
 
+    // Метод для получения токена
     func getAccessToken() -> String? {
         return KeychainHelper.standard.read(service: "access-token", account: "your-app")
     }
